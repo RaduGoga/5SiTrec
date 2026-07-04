@@ -1,5 +1,4 @@
-# 5SiTrec – Tracker Academic Personal
-# (Proiect Vibecoded pentru ora de info de la liceu)
+# 5SiTrec – Tracker Academic Personal (Proiect Vibecoded pentru ora de info de la liceu)
 
 ## Instalare & Pornire
 
