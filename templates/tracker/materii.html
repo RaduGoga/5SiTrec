@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Materii – 5SiTrec{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Materii</div>
+    <div class="page-subtitle">Gestionează materiile tale școlare</div>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('open')">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Adaugă materie
+  </button>
+</div>
+
+{% if materii %}
+<div class="materii-grid">
+  {% for materie in materii %}
+  <div class="materie-card">
+    <form method="post" action="{% url 'materie_delete' materie.pk %}" style="display:inline;" onsubmit="return confirm('Ștergi materia și toate datele aferente?')">
+      {% csrf_token %}
+      <button type="submit" class="m-delete" title="Șterge">✕</button>
+    </form>
+    <div class="m-name">{{ materie.nume }}</div>
+    {% if materie.profesor %}
+    <div class="m-prof">{{ materie.profesor }}</div>
+    {% endif %}
+
+    {% with media=materie.media %}
+    {% if media is not None %}
+    <div class="m-media {% if media >= 8 %}good{% elif media >= 5 %}{% else %}bad{% endif %}">
+      {{ media }}
+    </div>
+    {% else %}
+    <div class="m-media" style="color:var(--text-muted);font-size:18px;">—</div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="m-stats">
+      {{ materie.note.count }} note · {{ materie.absente.count }} absențe
+    </div>
+
+    {% with note_recente=materie.note_recente %}
+    {% if note_recente %}
+    <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+      {% for nota in note_recente %}
+      <span class="badge {% if nota.valoare >= 8 %}badge-mint{% elif nota.valoare >= 5 %}badge-gray{% else %}badge-danger{% endif %}">
+        {{ nota.valoare }}
+      </span>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="card-body">
+    <div class="empty-state">
+      <div class="icon">📚</div>
+      <p>Nu ai materii adăugate. Adaugă prima materie pentru a începe.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-title">Adaugă materie</div>
+    <form method="post" action="{% url 'materii' %}">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}
+        <div style="font-size:12px;color:var(--danger);margin-top:4px;">{{ error }}</div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('addModal').classList.remove('open')">Anulează</button>
+        <button type="submit" class="btn btn-primary">Adaugă</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if form.errors %}
+<script>document.getElementById('addModal').classList.add('open');</script>
+{% endif %}
+{% endblock %}

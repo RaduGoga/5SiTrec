@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Reflecții – 5SiTrec{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Reflecții săptămânale</div>
+    <div class="page-subtitle">Recapitulează săptămâna și setează obiective</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Form -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Săptămâna aceasta</span>
+      <span style="font-size:12px;color:var(--text-muted);">
+        din {{ start_saptamana|date:"d M Y" }}
+      </span>
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'reflectii' %}">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;">
+          {% if reflectie_curenta %}Actualizează{% else %}Salvează reflecția{% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Past reflections -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Reflecții anterioare</span>
+    </div>
+    {% if reflectii %}
+    <div class="card-body" style="padding:0;">
+      {% for r in reflectii %}
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
+          Săpt. {{ r.saptamana_start|date:"d M Y" }}
+        </div>
+        {% if r.ce_a_mers %}
+        <div style="margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;color:var(--mint-dark);text-transform:uppercase;letter-spacing:0.5px;">✓ Ce a mers</div>
+          <div style="font-size:13.5px;color:var(--charcoal-soft);margin-top:3px;">{{ r.ce_a_mers }}</div>
+        </div>
+        {% endif %}
+        {% if r.ce_a_fost_dificil %}
+        <div style="margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;color:var(--warning);text-transform:uppercase;letter-spacing:0.5px;">△ Dificultăți</div>
+          <div style="font-size:13.5px;color:var(--charcoal-soft);margin-top:3px;">{{ r.ce_a_fost_dificil }}</div>
+        </div>
+        {% endif %}
+        {% if r.obiectiv %}
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--info);text-transform:uppercase;letter-spacing:0.5px;">→ Obiectiv</div>
+          <div style="font-size:13.5px;color:var(--charcoal-soft);margin-top:3px;">{{ r.obiectiv }}</div>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card-body">
+      <div class="empty-state" style="padding:24px 0;">
+        <p>Nu ai reflecții salvate.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

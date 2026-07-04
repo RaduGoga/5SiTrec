@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard – 5SiTrec{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Dashboard</div>
+    <div class="page-subtitle">Bun venit, {{ request.user.username }} — privire de ansamblu asupra progresului tău</div>
+  </div>
+  <a href="{% url 'checkin' %}" class="btn btn-primary">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Check-in azi
+  </a>
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Media Generală</div>
+    {% if media_generala %}
+      <div class="stat-value {% if media_generala >= 8 %}good{% elif media_generala >= 5 %}{% else %}bad{% endif %}">
+        {{ media_generala }}
+      </div>
+    {% else %}
+      <div class="stat-value" style="color:var(--text-muted);font-size:18px;">—</div>
+    {% endif %}
+    <div class="stat-sub">din 10</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Absențe Total</div>
+    <div class="stat-value {% if total_absente > 10 %}bad{% elif total_absente > 5 %}warn{% endif %}">
+      {{ total_absente }}
+    </div>
+    <div class="stat-sub">{{ total_nemotivate }} nemotivate</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Consistency Score</div>
+    {% if consistency_score is not None %}
+      <div class="stat-value {% if consistency_score >= 70 %}good{% elif consistency_score >= 40 %}{% else %}bad{% endif %}">
+        {{ consistency_score }}
+      </div>
+      <div class="stat-sub">din 100 – ultimele 7 zile</div>
+    {% else %}
+      <div class="stat-value" style="color:var(--text-muted);font-size:18px;">—</div>
+      <div class="stat-sub">Începe check-in-urile</div>
+    {% endif %}
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Materie Slabă</div>
+    {% if materie_slaba %}
+      <div class="stat-value bad" style="font-size:20px;">{{ materie_slaba.materie.nume }}</div>
+      <div class="stat-sub">media {{ materie_slaba.media }}</div>
+    {% else %}
+      <div class="stat-value" style="color:var(--text-muted);font-size:18px;">—</div>
+    {% endif %}
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Cea Mai Bună</div>
+    {% if materie_buna %}
+      <div class="stat-value good" style="font-size:20px;">{{ materie_buna.materie.nume }}</div>
+      <div class="stat-sub">media {{ materie_buna.media }}</div>
+    {% else %}
+      <div class="stat-value" style="color:var(--text-muted);font-size:18px;">—</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Charts + Insights -->
+<div class="grid-2" style="margin-bottom:24px;">
+  <!-- Medii per materie -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Medii pe materii</span>
+    </div>
+    <div class="card-body">
+      {% if chart_data != "[]" %}
+      <canvas id="chartMaterii" height="200"></canvas>
+      {% else %}
+      <div class="empty-state">
+        <div class="icon">📊</div>
+        <p>Adaugă note pentru a vedea graficul.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Consistency over time -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Consistency Score – 14 zile</span>
+    </div>
+    <div class="card-body">
+      {% if checkin_scores != "[]" %}
+      <canvas id="chartCheckin" height="200"></canvas>
+      {% else %}
+      <div class="empty-state">
+        <div class="icon">📈</div>
+        <p>Completează check-in-uri zilnice pentru a vedea evoluția.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Insights + Note Recente -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Recomandări</span>
+    </div>
+    <div class="card-body">
+      {% for insight in insights %}
+      <div class="alert alert-{{ insight.tip }}">{{ insight.text }}</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Note recente</span>
+      <a href="{% url 'note' %}" class="btn btn-outline btn-sm">Vezi toate</a>
+    </div>
+    {% if note_recente %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Materie</th><th>Notă</th><th>Data</th><th>Descriere</th>
+        </tr></thead>
+        <tbody>
+          {% for nota in note_recente %}
+          <tr>
+            <td><strong>{{ nota.materie.nume }}</strong></td>
+            <td>
+              <span class="badge {% if nota.valoare >= 8 %}badge-mint{% elif nota.valoare >= 5 %}badge-gray{% else %}badge-danger{% endif %}">
+                {{ nota.valoare }}
+              </span>
+            </td>
+            <td style="color:var(--text-muted);">{{ nota.data|date:"d M" }}</td>
+            <td style="color:var(--text-muted);">{{ nota.descriere|default:"–" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card-body">
+      <div class="empty-state" style="padding:24px 0;">
+        <p>Nu ai note înregistrate. <a href="{% url 'note' %}" style="color:var(--mint-dark);font-weight:600;">Adaugă prima notă</a></p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+const chartColor = '#7FC8A9';
+const chartBorder = '#5aab8a';
+
+{% if chart_data != "[]" %}
+new Chart(document.getElementById('chartMaterii'), {
+  type: 'bar',
+  data: {
+    labels: {{ chart_labels|safe }},
+    datasets: [{
+      label: 'Medie',
+      data: {{ chart_data|safe }},
+      backgroundColor: chartColor + 'aa',
+      borderColor: chartBorder,
+      borderWidth: 1.5,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 0, max: 10, grid: { color: '#f0f0f0' }, ticks: { font: { family: 'Nunito' } } },
+      x: { grid: { display: false }, ticks: { font: { family: 'Nunito' } } }
+    }
+  }
+});
+{% endif %}
+
+{% if checkin_scores != "[]" %}
+new Chart(document.getElementById('chartCheckin'), {
+  type: 'line',
+  data: {
+    labels: {{ checkin_labels|safe }},
+    datasets: [{
+      label: 'Score',
+      data: {{ checkin_scores|safe }},
+      borderColor: chartBorder,
+      backgroundColor: chartColor + '22',
+      borderWidth: 2,
+      tension: 0.3,
+      fill: true,
+      pointRadius: 3,
+      pointBackgroundColor: chartBorder,
+      spanGaps: true,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 0, max: 100, grid: { color: '#f0f0f0' }, ticks: { font: { family: 'Nunito' } } },
+      x: { grid: { display: false }, ticks: { font: { family: 'Nunito' }, maxTicksLimit: 7 } }
+    }
+  }
+});
+{% endif %}
+</script>
+{% endblock %}

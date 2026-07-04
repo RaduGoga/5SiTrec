@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Absențe – 5SiTrec{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Absențe</div>
+    <div class="page-subtitle">Urmărește prezența la cursuri</div>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('open')">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Adaugă absență
+  </button>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid" style="grid-template-columns: repeat(3, 1fr); max-width: 500px;">
+  <div class="stat-card">
+    <div class="stat-label">Total</div>
+    <div class="stat-value">{{ absente.count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Motivate</div>
+    <div class="stat-value good">{{ total_motivate }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Nemotivate</div>
+    <div class="stat-value {% if total_nemotivate >= 5 %}bad{% endif %}">{{ total_nemotivate }}</div>
+  </div>
+</div>
+
+{% if total_nemotivate >= 5 %}
+<div class="alert alert-warning" style="margin-bottom:20px;">
+  ⚠️ Ai {{ total_nemotivate }} absențe nemotivate. Verifică situația cu profesorii.
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Toate absențele</span>
+  </div>
+  {% if absente %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Materie</th>
+          <th>Tip</th>
+          <th>Data</th>
+          <th>Motiv</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for absenta in absente %}
+        <tr>
+          <td><strong>{{ absenta.materie.nume }}</strong></td>
+          <td>
+            {% if absenta.tip == 'motivata' %}
+            <span class="badge badge-mint">Motivată</span>
+            {% else %}
+            <span class="badge badge-danger">Nemotivată</span>
+            {% endif %}
+          </td>
+          <td style="color:var(--text-muted);">{{ absenta.data|date:"d M Y" }}</td>
+          <td style="color:var(--text-muted);">{{ absenta.motiv|default:"–" }}</td>
+          <td>
+            <form method="post" action="{% url 'absenta_delete' absenta.pk %}" onsubmit="return confirm('Ștergi absența?')" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm">Șterge</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-body">
+    <div class="empty-state">
+      <div class="icon">📅</div>
+      <p>Nu ai absențe înregistrate.</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-title">Adaugă absență</div>
+    <form method="post" action="{% url 'absente' %}">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+      </div>
+      {% endfor %}
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('addModal').classList.remove('open')">Anulează</button>
+        <button type="submit" class="btn btn-primary">Adaugă</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if form.errors %}
+<script>document.getElementById('addModal').classList.add('open');</script>
+{% endif %}
+{% endblock %}

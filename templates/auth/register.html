@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5SiTrec – Înregistrare</title>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-card">
+    <div style="margin-bottom:28px;">
+      <div style="font-size:24px;font-weight:800;color:var(--charcoal);letter-spacing:-0.5px;">
+        5Si<span style="color:var(--mint-dark)">Trec</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">tracker academic personal</div>
+    </div>
+    <div class="auth-title">Crează cont</div>
+    <div class="auth-subtitle">Completează datele de mai jos pentru a începe.</div>
+
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label class="form-label">{{ field.label }}</label>
+        <input type="{{ field.field.widget.input_type }}"
+               name="{{ field.html_name }}"
+               class="form-control {% if field.errors %}is-invalid{% endif %}"
+               {% if field.value %}value="{{ field.value }}"{% endif %}>
+        {% for error in field.errors %}
+        <div style="font-size:12px;color:var(--danger);margin-top:4px;">{{ error }}</div>
+        {% endfor %}
+        {% if field.help_text %}
+        <div class="form-text">{{ field.help_text }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;">
+        Creează cont
+      </button>
+    </form>
+
+    <div style="margin-top:20px;text-align:center;font-size:13px;color:var(--text-muted);">
+      Ai deja cont?
+      <a href="{% url 'login' %}" style="color:var(--mint-dark);font-weight:600;text-decoration:none;">Autentifică-te</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

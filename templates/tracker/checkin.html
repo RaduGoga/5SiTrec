@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Study Check-in – 5SiTrec{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Study Check-in</div>
+    <div class="page-subtitle">Înregistrează-ți sesiunea de studiu de astăzi</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Form -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">
+        {% if checkin_azi %}Actualizează check-in-ul de azi{% else %}Check-in – astăzi{% endif %}
+      </span>
+      {% if checkin_azi %}
+      <span class="badge badge-mint">Completat</span>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'checkin' %}">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Cât ai studiat astăzi?</label>
+          <select name="ore_studiu" class="form-select">
+            {% for val, label in form.fields.ore_studiu.choices %}
+            <option value="{{ val }}" {% if form.ore_studiu.value == val or checkin_azi.ore_studiu == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cât de productiv te-ai simțit? (1 = deloc, 5 = foarte mult)</label>
+          <div class="scale-select">
+            {% for i in "12345" %}
+            <div class="scale-opt">
+              <input type="radio" name="productivitate" id="prod_{{ i }}" value="{{ i }}"
+                {% if form.productivitate.value == i or checkin_azi.productivitate|stringformat:"s" == i %}checked{% endif %}
+                {% if not checkin_azi and i == "3" %}checked{% endif %}>
+              <label for="prod_{{ i }}">{{ i }}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ai înțeles materia predată? (1 = deloc, 5 = complet)</label>
+          <div class="scale-select">
+            {% for i in "12345" %}
+            <div class="scale-opt">
+              <input type="radio" name="intelegere" id="int_{{ i }}" value="{{ i }}"
+                {% if form.intelegere.value == i or checkin_azi.intelegere|stringformat:"s" == i %}checked{% endif %}
+                {% if not checkin_azi and i == "3" %}checked{% endif %}>
+              <label for="int_{{ i }}">{{ i }}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nivel de stres (1 = relaxat, 5 = foarte stresat)</label>
+          <div class="scale-select">
+            {% for i in "12345" %}
+            <div class="scale-opt">
+              <input type="radio" name="stres" id="stres_{{ i }}" value="{{ i }}"
+                {% if form.stres.value == i or checkin_azi.stres|stringformat:"s" == i %}checked{% endif %}
+                {% if not checkin_azi and i == "3" %}checked{% endif %}>
+              <label for="stres_{{ i }}">{{ i }}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">
+          {% if checkin_azi %}Actualizează{% else %}Salvează check-in-ul{% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Istoric – ultimele 14 zile</span>
+    </div>
+    {% if checkins %}
+    <div>
+      <div class="checkin-row header">
+        <span>Data</span>
+        <span>Ore</span>
+        <span>Prod.</span>
+        <span>Înț.</span>
+        <span>Stres</span>
+        <span>Score</span>
+      </div>
+      {% for c in checkins %}
+      <div class="checkin-row">
+        <span>{{ c.data|date:"d M" }}</span>
+        <span>{{ c.get_ore_studiu_display }}</span>
+        <span>
+          <span class="badge {% if c.productivitate >= 4 %}badge-mint{% elif c.productivitate <= 2 %}badge-danger{% else %}badge-gray{% endif %}">
+            {{ c.productivitate }}
+          </span>
+        </span>
+        <span>
+          <span class="badge {% if c.intelegere >= 4 %}badge-mint{% elif c.intelegere <= 2 %}badge-danger{% else %}badge-gray{% endif %}">
+            {{ c.intelegere }}
+          </span>
+        </span>
+        <span>
+          <span class="badge {% if c.stres >= 4 %}badge-warning{% else %}badge-gray{% endif %}">
+            {{ c.stres }}
+          </span>
+        </span>
+        <span><strong>{{ c.consistency_score }}</strong></span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card-body">
+      <div class="empty-state" style="padding:24px 0;">
+        <p>Nu ai check-in-uri înregistrate.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
